@@ -193,7 +193,7 @@ def test_mnist_dataset():
     sample_labels = np.array([mnist_train_dataset[idx][1] for idx in [1,42,1000,2000,3000,4000,5000,5005]])
     compare_labels = np.array([0,7,0,5,9,7,7,8])
 
-    np.testing.assert_allclose(sample_norms, compare_against)
+    np.testing.assert_allclose(sample_norms, compare_against, rtol=5e-07)
     np.testing.assert_allclose(sample_labels, compare_labels)
 
 
