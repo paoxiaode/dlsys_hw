@@ -88,12 +88,13 @@ class Linear(Module):
         self.out_features = out_features
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.weight = Parameter(init.kaiming_uniform(in_features, out_features), device=device, dtype=dtype)
+        self.bias = Parameter(init.kaiming_uniform(out_features, 1).transpose() if bias else init.zeros(1, out_features))
         ### END YOUR SOLUTION
 
     def forward(self, X: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return X @ self.weight + self.bias.broadcast_to((X.shape[0], self.out_features))
         ### END YOUR SOLUTION
 
 
@@ -138,13 +139,31 @@ class BatchNorm1d(Module):
         self.eps = eps
         self.momentum = momentum
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.weight = Parameter(init.ones(dim, device=device, dtype=dtype, requires_grad=True))
+        self.bias = Parameter(init.zeros(dim, device=device, dtype=dtype, requires_grad=True))
+        self.running_mean = init.zeros(dim, device=device, dtype=dtype)
+        self.running_var = init.ones(dim, device=device, dtype=dtype)
         ### END YOUR SOLUTION
 
 
     def forward(self, x: Tensor) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if self.training:
+            n, k = x.shape
+            mean = x.sum(axes=0)/n
+            self.running_mean.data = ((1-self.momentum)* self.running_mean + self.momentum * mean).data
+
+            mean = mean.reshape((1, self.dim)).broadcast_to(x.shape)
+            var = ((x - mean)**2).sum(axes=0)/n
+            self.running_var.data= ((1-self.momentum)* self.running_var + self.momentum * var).data
+            var = var.reshape((1, self.dim)).broadcast_to(x.shape)
+        else:
+            mean = self.running_mean.reshape((1, self.dim)).broadcast_to(x.shape)
+            var = self.running_var.reshape((1, self.dim)).broadcast_to(x.shape)
+
+        weight = self.weight.reshape((1, self.dim)).broadcast_to(x.shape)
+        bias = self.bias.reshape((1, self.dim)).broadcast_to(x.shape)
+        return weight * (x - mean)/((var + self.eps)**0.5)+ bias
         ### END YOUR SOLUTION
 
 

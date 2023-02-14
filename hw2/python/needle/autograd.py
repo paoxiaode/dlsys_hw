@@ -153,7 +153,6 @@ class Value:
         self.cached_data = self.op.compute(
             *[x.realize_cached_data() for x in self.inputs]
         )
-        self.cached_data
         return self.cached_data
 
     def is_leaf(self):
@@ -182,6 +181,7 @@ class Value:
         self.cached_data = cached_data
         self.requires_grad = requires_grad
 
+    ## 生成const对应的Value示例
     @classmethod
     def make_const(cls, data, *, requires_grad=False):
         value = cls.__new__(cls)
@@ -364,9 +364,10 @@ class Tensor(Value):
             return needle.ops.MulScalar(other)(self)
 
     def __pow__(self, other):
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        if isinstance(other, Tensor):
+            raise NotImplementedError()
+        else:
+            return needle.ops.PowerScalar(other)(self)
 
     def __sub__(self, other):
         if isinstance(other, Tensor):
@@ -423,7 +424,19 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     reverse_topo_order = list(reversed(find_topo_sort([output_tensor])))
 
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    for node in reverse_topo_order:
+        adjoint = sum_node_list(node_to_output_grads_list[node])
+        partial_adjoints = (
+            [adjoint] if node.is_leaf() else node.op.gradient_as_tuple(adjoint, node)
+        )
+        for input_node, partial_adjoint in zip(node.inputs, partial_adjoints):
+            if input_node in node_to_output_grads_list:
+                node_to_output_grads_list[input_node].append(partial_adjoint)
+            else:
+                node_to_output_grads_list[input_node] = [partial_adjoint]
+
+    for node, partial_adjoints in node_to_output_grads_list.items():
+        node.grad = sum_node_list(partial_adjoints)
     ### END YOUR SOLUTION
 
 
@@ -436,14 +449,23 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
     sort.
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    topo_order = []
+    visited = set()
+    for node in node_list:
+        if node not in visited:
+            topo_sort_dfs(node, visited, topo_order)
+    return topo_order
     ### END YOUR SOLUTION
 
 
 def topo_sort_dfs(node, visited, topo_order):
     """Post-order DFS"""
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    visited.add(node)
+    for neighbor in node.inputs:
+        if neighbor not in visited:
+            topo_sort_dfs(neighbor, visited, topo_order)
+    topo_order.append(node)
     ### END YOUR SOLUTION
 
 
