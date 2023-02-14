@@ -45,6 +45,7 @@ def parse_mnist(image_filename, label_filename):
     return (X, label)
     ### END YOUR SOLUTION
 
+
 class Transform:
     def __call__(self, x):
         raise NotImplementedError
@@ -147,20 +148,27 @@ class DataLoader:
         self.dataset = dataset
         self.shuffle = shuffle
         self.batch_size = batch_size
-        if not self.shuffle:
-            self.ordering = np.array_split(
-                np.arange(len(dataset)), range(batch_size, len(dataset), batch_size)
-            )
+
+        arr = np.arange(len(dataset))
+        if self.shuffle:
+            np.random.shuffle(arr)
+        self.ordering = np.array_split(arr, range(batch_size, len(dataset), batch_size))
+        self.idx = -1
+        self.total_num = len(self.dataset)
 
     def __iter__(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
         return self
+        ### END YOUR SOLUTION
 
     def __next__(self):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        self.idx += 1
+        if self.idx >= len(self.ordering):
+            self.idx = -1
+            raise StopIteration()
+        samples = self.dataset[self.ordering[self.idx]]
+        return [Tensor(x) for x in samples]
         ### END YOUR SOLUTION
 
 

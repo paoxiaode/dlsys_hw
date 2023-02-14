@@ -166,18 +166,18 @@ class BatchNorm1d(Module):
                 (1 - self.momentum) * self.running_mean + self.momentum * mean
             ).data
 
-            mean = mean.reshape((1, self.dim)).broadcast_to(x.shape)
+            mean = mean.broadcast_to(x.shape)
             var = ((x - mean) ** 2).sum(axes=0) / n
             self.running_var.data = (
                 (1 - self.momentum) * self.running_var + self.momentum * var
             ).data
-            var = var.reshape((1, self.dim)).broadcast_to(x.shape)
+            var = var.broadcast_to(x.shape)
         else:
-            mean = self.running_mean.reshape((1, self.dim)).broadcast_to(x.shape)
-            var = self.running_var.reshape((1, self.dim)).broadcast_to(x.shape)
+            mean = self.running_mean.broadcast_to(x.shape)
+            var = self.running_var.broadcast_to(x.shape)
 
-        weight = self.weight.reshape((1, self.dim)).broadcast_to(x.shape)
-        bias = self.bias.reshape((1, self.dim)).broadcast_to(x.shape)
+        weight = self.weight.broadcast_to(x.shape)
+        bias = self.bias.broadcast_to(x.shape)
         return weight * (x - mean) / ((var + self.eps) ** 0.5) + bias
         # END YOUR SOLUTION
 
