@@ -60,7 +60,6 @@ def epoch(dataloader, model, opt=None):
         y_hat = model(X)
         loss = loss_func(y_hat, y)
         if opt:
-            # opt.reset_grad()
             loss.backward()
             opt.step()
         total_loss += loss.numpy() * n
@@ -82,8 +81,13 @@ def train_mnist(
 ):
     np.random.seed(4)
     ### BEGIN YOUR SOLUTION
-    train_dataset = ndl.data.MNISTDataset(f"{data_dir}/train-images-idx3-ubyte.gz",f"{data_dir}/train-labels-idx1-ubyte.gz")
-    test_dataset = ndl.data.MNISTDataset(f"{data_dir}/t10k-images-idx3-ubyte.gz",f"{data_dir}/t10k-labels-idx1-ubyte.gz")
+    train_dataset = ndl.data.MNISTDataset(
+        f"{data_dir}/train-images-idx3-ubyte.gz",
+        f"{data_dir}/train-labels-idx1-ubyte.gz",
+    )
+    test_dataset = ndl.data.MNISTDataset(
+        f"{data_dir}/t10k-images-idx3-ubyte.gz", f"{data_dir}/t10k-labels-idx1-ubyte.gz"
+    )
     train_dataloader = ndl.data.DataLoader(train_dataset, batch_size, shuffle=True)
     test_dataloader = ndl.data.DataLoader(test_dataset, batch_size, shuffle=False)
 
@@ -92,8 +96,6 @@ def train_mnist(
     for i in range(epochs):
         train_err, train_loss = epoch(train_dataloader, model, opt)
         test_err, test_loss = epoch(test_dataloader, model)
-        # print(f"epoch {i}")
-        # print(train_err, train_loss, test_err, test_loss)
     return train_err, train_loss, test_err, test_loss
     ### END YOUR SOLUTION
 

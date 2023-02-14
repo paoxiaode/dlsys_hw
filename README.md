@@ -4,6 +4,7 @@
 
 * 1/29: finish hw0
 * 2/1 : finish hw1
+* 2/14: finish hw2
 
 
 ## ref
