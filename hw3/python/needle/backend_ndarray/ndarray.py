@@ -122,6 +122,7 @@ class NDArray:
     @staticmethod
     def compact_strides(shape):
         """ Utility function to compute compact strides """
+        # shape [3,2] compact stride [2,1]
         stride = 1
         res = []
         for i in range(1, len(shape) + 1):
@@ -206,6 +207,7 @@ class NDArray:
 
     def compact(self):
         """ Convert a matrix to be compact """
+        # if the array is row-major and correspoding stride
         if self.is_compact():
             return self
         else:
@@ -241,7 +243,11 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if prod(self.shape) != prod(new_shape) or not self.is_compact():
+            raise ValueError()
+        _shape = new_shape
+        _stride = self.compact_strides(_shape)
+        return self.as_strided(_shape, _stride)
         ### END YOUR SOLUTION
 
     def permute(self, new_axes):
@@ -264,7 +270,9 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        _shape = tuple([self.shape[i] for i in new_axes])
+        _stride = tuple([self.strides[i] for i in new_axes])
+        return self.as_strided(_shape, _stride)
         ### END YOUR SOLUTION
 
     def broadcast_to(self, new_shape):
@@ -380,6 +388,7 @@ class NDArray:
         """Run either an element-wise or scalar version of a function,
         depending on whether "other" is an NDArray or scalar
         """
+        # create new empty array
         out = NDArray.make(self.shape, device=self.device)
         if isinstance(other, NDArray):
             assert self.shape == other.shape, "operation needs two equal-sized arrays"
