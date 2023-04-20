@@ -67,13 +67,15 @@ namespace needle
       /// BEGIN YOUR SOLUTION
       std::vector<uint32_t> idx(shape.size(), 0);
       int total_elem = 1;
-      for (int i = 0; i < shape.size(); i++) {
+      for (int i = 0; i < shape.size(); i++)
+      {
         total_elem *= shape[i];
       }
-      for(int cnt = 0; cnt < total_elem; cnt ++)
+      for (int cnt = 0; cnt < total_elem; cnt++)
       {
         int cur_idx = offset;
-        for (auto i = 0; i < strides.size(); i++){
+        for (auto i = 0; i < strides.size(); i++)
+        {
           cur_idx += strides[i] * idx[i];
         }
         out->ptr[cnt] = a.ptr[cur_idx];
@@ -112,17 +114,19 @@ namespace needle
       /// BEGIN YOUR SOLUTION
       std::vector<uint32_t> idx(shape.size(), 0);
       int total_elem = 1;
-      for (int i = 0; i < shape.size(); i++) {
+      for (int i = 0; i < shape.size(); i++)
+      {
         total_elem *= shape[i];
       }
-      for(int cnt = 0; cnt < total_elem; cnt ++)
+      for (int cnt = 0; cnt < total_elem; cnt++)
       {
         int cur_idx = offset;
-        for (auto i = 0; i < strides.size(); i++){
+        for (auto i = 0; i < strides.size(); i++)
+        {
           cur_idx += strides[i] * idx[i];
         }
         if (cur_idx < out->size)
-        out->ptr[cur_idx] = a.ptr[cnt];
+          out->ptr[cur_idx] = a.ptr[cnt];
         for (auto i = shape.size() - 1; i >= 0; i--)
         {
           if (idx[i] == shape[i] - 1)
@@ -162,10 +166,11 @@ namespace needle
       std::vector<uint32_t> idx(shape.size(), 0);
       int cnt = 0;
       int cur_idx;
-      while(1)
+      while (1)
       {
         cur_idx = 0;
-        for (auto i = 0; i < strides.size(); i++){
+        for (auto i = 0; i < strides.size(); i++)
+        {
           cur_idx += strides[i] * idx[i];
         }
         out->ptr[cur_idx + offset] = val;
@@ -231,7 +236,106 @@ namespace needle
      */
 
     /// BEGIN YOUR SOLUTION
+    enum class _EwiseOp
+    {
+      MUL,
+      DIV,
+      MAX,
+      EQ,
+      GE,
+      LOG,
+      EXP,
+      TANH
+    };
 
+    enum class _ScalarOp
+    {
+      MUL,
+      DIV,
+      MAX,
+      POWER,
+      EQ,
+      GE
+    };
+
+    template <_EwiseOp op>
+    void EwiseOp(const AlignedArray &a, const AlignedArray &b, AlignedArray *out)
+    {
+      for (int idx = 0; idx < a.size; idx++)
+      {
+        if constexpr (op == _EwiseOp::MUL)
+        {
+          out->ptr[idx] = a.ptr[idx] * b.ptr[idx];
+        }
+        if constexpr (op == _EwiseOp::DIV)
+        {
+          out->ptr[idx] = a.ptr[idx] / b.ptr[idx];
+        }
+        if constexpr (op == _EwiseOp::MAX)
+        {
+          out->ptr[idx] = std::max(a.ptr[idx], b.ptr[idx]);
+        }
+        if constexpr (op == _EwiseOp::EQ)
+        {
+          out->ptr[idx] = (scalar_t)(a.ptr[idx] == b.ptr[idx]);
+        }
+        if constexpr (op == _EwiseOp::GE)
+        {
+          out->ptr[idx] = (scalar_t)(a.ptr[idx] >= b.ptr[idx]);
+        }
+      }
+    }
+    template <_EwiseOp op>
+    void EwiseFunc(const AlignedArray &a, AlignedArray *out)
+    {
+      for (int idx = 0; idx < a.size; idx++)
+      {
+        if constexpr (op == _EwiseOp::LOG)
+        {
+          out->ptr[idx] = std::log(a.ptr[idx]);
+        }
+        if constexpr (op == _EwiseOp::EXP)
+        {
+          out->ptr[idx] = std::exp(a.ptr[idx]);
+        }
+        if constexpr (op == _EwiseOp::TANH)
+        {
+          out->ptr[idx] = std::tanh(a.ptr[idx]);
+        }
+      }
+    }
+
+    template <_ScalarOp op>
+    void ScalarOp(const AlignedArray &a, scalar_t val, AlignedArray *out)
+    {
+      for (int idx = 0; idx < a.size; idx++)
+      {
+        if constexpr (op == _ScalarOp::MUL)
+        {
+          out->ptr[idx] = a.ptr[idx] * val;
+        }
+        if constexpr (op == _ScalarOp::DIV)
+        {
+          out->ptr[idx] = a.ptr[idx] / val;
+        }
+        if constexpr (op == _ScalarOp::MAX)
+        {
+          out->ptr[idx] = std::max(a.ptr[idx], val);
+        }
+        if constexpr (op == _ScalarOp::EQ)
+        {
+          out->ptr[idx] = (scalar_t)(a.ptr[idx] == val);
+        }
+        if constexpr (op == _ScalarOp::GE)
+        {
+          out->ptr[idx] = (scalar_t)(a.ptr[idx] >= val);
+        }
+        if constexpr (op == _ScalarOp::POWER)
+        {
+          out->ptr[idx] = std::pow(a.ptr[idx], val);
+        }
+      }
+    }
     /// END YOUR SOLUTION
 
     void Matmul(const AlignedArray &a, const AlignedArray &b, AlignedArray *out, uint32_t m, uint32_t n,
@@ -251,7 +355,18 @@ namespace needle
        */
 
       /// BEGIN YOUR SOLUTION
-
+      for (uint32_t i = 0; i < m; i++)
+      {
+        for (uint32_t j = 0; j < p; j++)
+        {
+          scalar_t val = 0;
+          for (uint32_t k = 0; k < n; k++)
+          {
+            val += a.ptr[i * n + k] * b.ptr[k * p + j];
+          }
+          out->ptr[i * p + j] = val;
+        }
+      }
       /// END YOUR SOLUTION
     }
 
@@ -282,7 +397,18 @@ namespace needle
       out = (float *)__builtin_assume_aligned(out, TILE * ELEM_SIZE);
 
       /// BEGIN YOUR SOLUTION
-
+      for (uint32_t i = 0; i < TILE; i++)
+      {
+        for (uint32_t j = 0; j < TILE; j++)
+        {
+          scalar_t val = out[i * TILE + j];
+          for (uint32_t k = 0; k < TILE; k++)
+          {
+            val += a[i * TILE + k] * b[k * TILE + j];
+          }
+          out[i * TILE + j] = val;
+        }
+      }
       /// END YOUR SOLUTION
     }
 
@@ -309,7 +435,38 @@ namespace needle
        *
        */
       /// BEGIN YOUR SOLUTION
-
+      const size_t TILE2 = TILE * TILE;
+      float *A = new float[TILE * n];
+      float *B = new float[TILE * n];
+      float *C = new float[TILE2];
+      for (size_t i = 0; i < m/TILE; ++i) {
+        for (size_t ii = 0; ii < n/TILE; ++ii) {
+          for (size_t jj = 0; jj < TILE2; ++jj) {
+            A[ii * TILE2 + jj] = a.ptr[i * n * TILE + ii * TILE2 + jj];
+          }
+        }
+        for (size_t j = 0; j < p/TILE; ++j) {
+          for (size_t ii = 0; ii < n/TILE; ++ii) {
+            for (size_t jj = 0; jj < TILE2; ++jj) {
+              B[ii * TILE2 + jj] = b.ptr[j * TILE2 + ii * TILE * p + jj];
+            }
+          }
+          for (size_t ii = 0; ii < TILE2; ++ii) {
+            C[ii] = 0.0;
+          }
+          for (size_t k = 0; k < n/TILE; ++k) {
+            // compute matmul
+            AlignedDot(&A[k * TILE2], &B[k * TILE2], C);
+          }
+          // write result to memory
+          for (size_t ii = 0; ii < TILE2; ++ii) {
+            out->ptr[i * p * TILE + j * TILE2 + ii] = C[ii];
+          }
+        }
+      }
+      delete[] A; A = nullptr;
+      delete[] B; B = nullptr;
+      delete[] C; C = nullptr;
       /// END YOUR SOLUTION
     }
 
@@ -325,7 +482,15 @@ namespace needle
        */
 
       /// BEGIN YOUR SOLUTION
-
+      for (int i = 0; i < out->size; i++)
+      {
+        scalar_t max_n = a.ptr[i * reduce_size];
+        for (int idx = 1; idx < reduce_size; idx++)
+        {
+          max_n = std::max(a.ptr[i * reduce_size + idx], max_n);
+        }
+        out->ptr[i] = max_n;
+      }
       /// END YOUR SOLUTION
     }
 
@@ -341,7 +506,15 @@ namespace needle
        */
 
       /// BEGIN YOUR SOLUTION
-
+      for (int i = 0; i < out->size; i++)
+      {
+        scalar_t sum_n = 0;
+        for (int idx = 0; idx < reduce_size; idx++)
+        {
+          sum_n += a.ptr[i * reduce_size + idx];
+        }
+        out->ptr[i] = sum_n;
+      }
       /// END YOUR SOLUTION
     }
 
@@ -383,22 +556,22 @@ PYBIND11_MODULE(ndarray_backend_cpu, m)
   m.def("ewise_add", EwiseAdd);
   m.def("scalar_add", ScalarAdd);
 
-  // m.def("ewise_mul", EwiseMul);
-  // m.def("scalar_mul", ScalarMul);
-  // m.def("ewise_div", EwiseDiv);
-  // m.def("scalar_div", ScalarDiv);
-  // m.def("scalar_power", ScalarPower);
+  m.def("ewise_mul", EwiseOp<_EwiseOp::MUL>);
+  m.def("scalar_mul", ScalarOp<_ScalarOp::MUL>);
+  m.def("ewise_div", EwiseOp<_EwiseOp::DIV>);
+  m.def("scalar_div", ScalarOp<_ScalarOp::DIV>);
+  m.def("scalar_power", ScalarOp<_ScalarOp::POWER>);
 
-  // m.def("ewise_maximum", EwiseMaximum);
-  // m.def("scalar_maximum", ScalarMaximum);
-  // m.def("ewise_eq", EwiseEq);
-  // m.def("scalar_eq", ScalarEq);
-  // m.def("ewise_ge", EwiseGe);
-  // m.def("scalar_ge", ScalarGe);
+  m.def("ewise_maximum", EwiseOp<_EwiseOp::MAX>);
+  m.def("scalar_maximum", ScalarOp<_ScalarOp::MAX>);
+  m.def("ewise_eq", EwiseOp<_EwiseOp::EQ>);
+  m.def("scalar_eq", ScalarOp<_ScalarOp::EQ>);
+  m.def("ewise_ge", EwiseOp<_EwiseOp::GE>);
+  m.def("scalar_ge", ScalarOp<_ScalarOp::GE>);
 
-  // m.def("ewise_log", EwiseLog);
-  // m.def("ewise_exp", EwiseExp);
-  // m.def("ewise_tanh", EwiseTanh);
+  m.def("ewise_log", EwiseFunc<_EwiseOp::LOG>);
+  m.def("ewise_exp", EwiseFunc<_EwiseOp::EXP>);
+  m.def("ewise_tanh", EwiseFunc<_EwiseOp::TANH>);
 
   m.def("matmul", Matmul);
   m.def("matmul_tiled", MatmulTiled);
