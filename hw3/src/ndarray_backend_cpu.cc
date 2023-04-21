@@ -439,34 +439,44 @@ namespace needle
       float *A = new float[TILE * n];
       float *B = new float[TILE * n];
       float *C = new float[TILE2];
-      for (size_t i = 0; i < m/TILE; ++i) {
-        for (size_t ii = 0; ii < n/TILE; ++ii) {
-          for (size_t jj = 0; jj < TILE2; ++jj) {
-            A[ii * TILE2 + jj] = a.ptr[i * n * TILE + ii * TILE2 + jj];
+      for (int i = 0; i < m / TILE; ++i)
+      {
+        for (int ii = 0; ii < n / TILE; ++ii)
+        {
+          for (int num = 0; num < TILE2; ++num)
+          {
+            A[ii * TILE2 + num] = a.ptr[i * n * TILE + ii * TILE2 + num];
           }
         }
-        for (size_t j = 0; j < p/TILE; ++j) {
-          for (size_t ii = 0; ii < n/TILE; ++ii) {
-            for (size_t jj = 0; jj < TILE2; ++jj) {
-              B[ii * TILE2 + jj] = b.ptr[j * TILE2 + ii * TILE * p + jj];
+        for (int j = 0; j < p / TILE; ++j)
+        {
+          for (int ii = 0; ii < n / TILE; ++ii)
+          {
+            for (int num = 0; num < TILE2; ++num)
+            {
+              B[ii * TILE2 + num] = b.ptr[ii * TILE * p + j * TILE2 + num];
             }
           }
-          for (size_t ii = 0; ii < TILE2; ++ii) {
-            C[ii] = 0.0;
+          for (int k = 0; k < TILE2; ++k)
+          {
+            C[k] = 0.0;
           }
-          for (size_t k = 0; k < n/TILE; ++k) {
-            // compute matmul
+          for (int k = 0; k < n / TILE; ++k)
+          {
             AlignedDot(&A[k * TILE2], &B[k * TILE2], C);
           }
-          // write result to memory
-          for (size_t ii = 0; ii < TILE2; ++ii) {
-            out->ptr[i * p * TILE + j * TILE2 + ii] = C[ii];
+          for (int k = 0; k < TILE2; ++k)
+          {
+            out->ptr[i * p * TILE + j * TILE2 + k] = C[k];
           }
         }
       }
-      delete[] A; A = nullptr;
-      delete[] B; B = nullptr;
-      delete[] C; C = nullptr;
+      delete[] A;
+      A = nullptr;
+      delete[] B;
+      B = nullptr;
+      delete[] C;
+      C = nullptr;
       /// END YOUR SOLUTION
     }
 
